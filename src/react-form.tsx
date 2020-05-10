@@ -41,26 +41,28 @@ type FormState<T extends FormModel> = {
 	[K in keyof T]: FieldState<T, K>
 }
 
-interface UseForm<T extends FormModel> {
+export interface UseForm<T extends FormModel> {
 	state: FormState<T> | undefined
 	formID: string
+	controlled: boolean
 	onChange: (value: string | number | boolean | undefined, name: string) => void
 	onBlur: (name: string) => void
 	valid: () => boolean	// Array<keyof T> | null
 	set: (values: Partial<T>) => void
 	get: () => Partial<T>
+	reset: () => void
 }
 
 interface UseFormOpts<T extends FormModel> {
 	init?: Partial<T>
 	formID?: string
+	controlled?: boolean
 }
 
 //export function useForm<T extends FormModel>(type: t.TypeC<t.AnyProps> | t.PartialC<t.AnyProps>, { init, formID }: UseFormOpts<T> = {}): UseForm<T> {
-export function useForm<T extends FormModel>(type: any, { init, formID }: UseFormOpts<T> = {}): UseForm<T> {
+export function useForm<T extends FormModel>(type: any, { init, formID, controlled }: UseFormOpts<T> = {}): UseForm<T> {
 	let tmpInit: Record<string, FieldState<T>> = {}
 	if (init) for (let name in type.props) (tmpInit)[name] = { dv: (init as any)[name], v: (init as any)[name] }
-	//else for (let name in type.props) (tmpInit)[name] = { dv: '', v: '' } as any
 	let initialState: FormState<T> = tmpInit as FormState<T>
 	const x: Partial<Record<keyof T, string>> = {}
 	const [form, setForm] = React.useState<FormState<T> | undefined>(init && initialState)
@@ -76,6 +78,16 @@ export function useForm<T extends FormModel>(type: any, { init, formID }: UseFor
 		for (let name in type.props) ret[name] = form && form[name as keyof T].v
 		return ret
 	}, [type, form])
+
+	const reset = React.useCallback(function reset() {
+		setForm(form => {
+			if (form) {
+				let tmp: Record<string, FieldState<T>> = {}
+				for (let name in type.props) tmp[name] = { ...form[name as keyof T], v: form[name as keyof T].dv, error: undefined }
+				return tmp as FormState<T>
+			}
+		})
+	}, [type, setForm])
 
 	const validateField = React.useCallback(function validateField(value: any, fieldName: keyof T) {
 		// const flds = validate(value, (<any>type.props)[fieldName])
@@ -95,8 +107,21 @@ export function useForm<T extends FormModel>(type: any, { init, formID }: UseFor
 				if (flds) setForm(form => (form && { ...form, [name]: { ...form[name], error: true } }))
 			}
 		}
+		console.log('Invalid fields', flds)
+		if (flds) {
+			// Focus first child
+			const formEl = document.getElementById(formID || '') as HTMLFormElement
+			for (const el of formEl.elements) {
+				const f = el as any
+				console.log('F', f.name, !!f.focus)
+				if (f.name && f.focus && (flds as string[]).indexOf(f.name) >= 0) {
+					f.focus()
+					break
+				}
+			}
+		}
 		return !flds
-	}, [type, form, setForm])
+	}, [type, get, setForm, formID])
 
 	const debounceValidator = React.useCallback(debounce(validateField, 1000), [])
 
@@ -104,7 +129,7 @@ export function useForm<T extends FormModel>(type: any, { init, formID }: UseFor
 		const n = name as keyof T
 		setForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
 		debounceValidator(value, n)
-	}, [setForm])
+	}, [setForm, debounceValidator])
 
 	const handleBlur = React.useCallback(function handleBlur(name: string) {
 		const n = name as keyof T
@@ -114,20 +139,23 @@ export function useForm<T extends FormModel>(type: any, { init, formID }: UseFor
 	return {
 		state: form,
 		formID: formID || '',
+		controlled: !!controlled,
 		onChange: handleChange,
 		onBlur: handleBlur,
 		valid,
 		set,
-		get
+		get,
+		reset
 	}
 }
 
-export interface InputProps<V> {
+export interface InputPropsBase<V> {
 	formID?: string
 	name: string
+	controlled: boolean
 	value?: V
 	defaultValue?: V
-	error?: string | false
+	error?: string | boolean
 	onChange: (value: V | undefined, name: string) => void
 	onBlur?: (name: string) => void
 }
@@ -135,20 +163,22 @@ export interface InputProps<V> {
 type WithFormProps<T extends FormModel> = {
 	name: keyof FormState<T>
 	form: UseForm<T>
-	error: string
+	error?: string
 }
 
-export function withForm<V extends string | number | boolean, P extends InputProps<V> = InputProps<V>, T extends FormModel = any>(InputComponent: React.ComponentType<P | InputProps<V>>) {
-	return function WithForm({ name, form, error, ...props }: Omit<P, keyof InputProps<V>> & WithFormProps<T>) {
-		return <InputComponent {...props}
+export function withForm<V extends string | number | boolean, P extends InputPropsBase<V> = InputPropsBase<V>, T extends FormModel = any>(InputComponent: React.ComponentType<P>) {
+	return function WithForm({ name, form, error, ...props }: Omit<P, keyof InputPropsBase<V>> & WithFormProps<T>) {
+		// FIXME type assertion
+		return <InputComponent {...props as unknown as P}
 			name={name as string}
 			formID={form.formID}
+			controlled={form.controlled}
+			value={form.state && form.state[name]?.v as unknown as V}
 			defaultValue={form.state && form.state[name]?.dv as unknown as V}
-			error={form.state && form.state[name]?.error && error}
+			error={form.state && form.state[name]?.error && (error || true)}
 			onChange={form.onChange}
 			onBlur={form.onBlur}
 		/>
-			//value={form.state[name]?.v as unknown as V}
 	}
 }
 
