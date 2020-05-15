@@ -17,7 +17,7 @@
     "lint": "tslint -p tsconfig.json",
     "watch": "tsc --watch -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "publish": "npm clean && npm run build && npm publish"
+    "publish": "npm run clean && npm run build && npm publish"
   },
   "repository": {
     "type": "git",
