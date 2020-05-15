@@ -1,7 +1,7 @@
-import * as t from 'io-ts'
-
 export * from 'io-ts'
 export { isRight } from 'fp-ts/lib/Either'
+
+import * as t from 'io-ts'
 
 //////////////////////
 // Helper functions //
