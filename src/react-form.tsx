@@ -27,21 +27,17 @@ export function validateForm<T = string>(value: T, reqType: t.TypeC<t.AnyProps> 
 ////////////////
 // Form state //
 ////////////////
-interface FormModel {
-	//[key: string]: string | number | boolean
-}
-
-interface FieldState<T extends FormModel, K extends keyof T = keyof T> {
+interface FieldState<T, K extends keyof T = keyof T> {
 	dv: T[K],
 	v: T[K],
 	error?: boolean
 }
 
-type FormState<T extends FormModel> = {
+type FormState<T> = {
 	[K in keyof T]: FieldState<T, K>
 }
 
-export interface UseForm<T extends FormModel> {
+export interface UseForm<T> {
 	state: FormState<T> | undefined
 	formID: string
 	controlled: boolean
@@ -53,14 +49,13 @@ export interface UseForm<T extends FormModel> {
 	reset: () => void
 }
 
-interface UseFormOpts<T extends FormModel> {
+interface UseFormOpts<T> {
 	init?: Partial<T>
 	formID?: string
 	controlled?: boolean
 }
 
-//export function useForm<T extends FormModel>(type: t.TypeC<t.AnyProps> | t.PartialC<t.AnyProps>, { init, formID }: UseFormOpts<T> = {}): UseForm<T> {
-export function useForm<T extends FormModel>(type: any, { init, formID, controlled }: UseFormOpts<T> = {}): UseForm<T> {
+export function useForm<T>(type: t.HasProps, { init, formID, controlled }: UseFormOpts<T> = {}): UseForm<T> {
 	let tmpInit: Record<string, FieldState<T>> = {}
 	if (init) for (let name in type.props) (tmpInit)[name] = { dv: (init as any)[name], v: (init as any)[name] }
 	let initialState: FormState<T> = tmpInit as FormState<T>

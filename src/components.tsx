@@ -67,7 +67,7 @@ export interface InputProps<V> extends InputPropsBase<V> {
 ////////////
 // Button //
 ////////////
-interface ButtonProps  {
+interface ButtonProps {
 	className?: string
 	type?: 'submit' | 'reset' | 'button'
 	onClick?: () => void
