@@ -1,7 +1,7 @@
 {
-  "name": "simple-form",
-  "version": "0.9.0",
-  "description": "Simple form library for react with hooks",
+  "name": "@symbion/simple-form",
+  "version": "0.1.0",
+  "description": "Simple form library for React, TypeScript and io-ts",
   "main": "lib/index.js",
   "module": "esm/index.js",
   "typings": "lib/index.d.ts",
@@ -17,9 +17,14 @@
     "watch": "tsc --watch -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/szilu/simple-form"
+  },
+  "author": "Szilárd Hajba <szilu@symbion.hu>",
   "license": "MIT",
   "devDependencies": {
+    "@types/lodash": "^4.14.150",
     "@types/react": "^16.9.34",
     "jest": "^26.0.1",
     "rimraf": "^3.0.2",
@@ -33,7 +38,6 @@
     "react": "^16.13.1"
   },
   "dependencies": {
-    "@types/lodash": "^4.14.150",
     "fp-ts": "^2.5.4",
     "io-ts": "^2.2.2",
     "lodash": "^4.17.15"
