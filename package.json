@@ -10,14 +10,15 @@
     "esm"
   ],
   "scripts": {
-    "build": "npm run build-cjs && npm run build-esm",
+    "build": "npm run clean && npm run build-cjs && npm run build-esm",
     "build-esm": "tsc -p tsconfig-esm.json",
     "build-cjs": "tsc -p tsconfig.json",
     "clean": "rimraf lib esm",
     "lint": "tslint -p tsconfig.json",
     "watch": "tsc --watch -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "publish": "npm run clean && npm run build && npm publish"
+    "prepare": "npm run build",
+    "pub": "npm publish --access public"
   },
   "repository": {
     "type": "git",
