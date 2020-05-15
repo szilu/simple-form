@@ -55,7 +55,8 @@ interface UseFormOpts<T> {
 	controlled?: boolean
 }
 
-export function useForm<T>(type: t.HasProps, { init, formID, controlled }: UseFormOpts<T> = {}): UseForm<T> {
+//export function useForm<T>(type: t.HasProps, { init, formID, controlled }: UseFormOpts<T> = {}): UseForm<T> {
+export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID, controlled }: UseFormOpts<T> = {}): UseForm<T> {
 	let tmpInit: Record<string, FieldState<T>> = {}
 	if (init) for (let name in type.props) (tmpInit)[name] = { dv: (init as any)[name], v: (init as any)[name] }
 	let initialState: FormState<T> = tmpInit as FormState<T>
@@ -155,13 +156,13 @@ export interface InputPropsBase<V> {
 	onBlur?: (name: string) => void
 }
 
-type WithFormProps<T extends FormModel> = {
+type WithFormProps<T> = {
 	name: keyof FormState<T>
 	form: UseForm<T>
 	error?: string
 }
 
-export function withForm<V extends string | number | boolean, P extends InputPropsBase<V> = InputPropsBase<V>, T extends FormModel = any>(InputComponent: React.ComponentType<P>) {
+export function withForm<V extends string | number | boolean, P extends InputPropsBase<V> = InputPropsBase<V>, T = any>(InputComponent: React.ComponentType<P>) {
 	return function WithForm({ name, form, error, ...props }: Omit<P, keyof InputPropsBase<V>> & WithFormProps<T>) {
 		// FIXME type assertion
 		return <InputComponent {...props as unknown as P}
