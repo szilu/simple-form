@@ -7,8 +7,8 @@ import * as t from 'io-ts'
 // Helper functions //
 //////////////////////
 
-// "literal" helper for "keyof" type
-export function literal(...values: string[]) {
+// "literals" helper for "keyof" type
+export function literals(...values: string[]) {
 	let obj: Record<string, boolean> = {}
 	for (const v of values) obj[v] = true
 	return t.keyof(obj)
@@ -40,7 +40,36 @@ export class NumberType extends t.Type<number> {
 export interface NumberC extends NumberType {}
 // tslint:disable-next-line
 export const number: NumberC = new NumberType()
-export const number2: NumberC = new NumberType()
+
+// Integer type
+export class IntegerType extends t.Type<number> {
+	readonly _tag: 'IntegerType' = 'IntegerType'
+	constructor() {
+		super(
+			'integer',
+			(u): u is number => typeof u === 'number' && Number.isInteger(u),
+			(u, c) => (this.is(u) ? t.success(u) : t.failure(u, c)),
+			t.identity
+		)
+	}
+}
+export interface IntegerC extends IntegerType {}
+export const integer: IntegerC = new IntegerType()
+
+// Id number type
+export class IdType extends t.Type<number> {
+	readonly _tag: 'IdType' = 'IdType'
+	constructor() {
+		super(
+			'identifier',
+			(u): u is number => typeof u === 'number' && Number.isInteger(u) && u >= 0,
+			(u, c) => (this.is(u) ? t.success(u) : t.failure(u, c)),
+			t.identity
+		)
+	}
+}
+export interface IdC extends IdType {}
+export const id: IdC = new IdType()
 
 // "true" type
 export class TrueType extends t.Type<true> {

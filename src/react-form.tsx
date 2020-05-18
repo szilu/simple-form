@@ -55,7 +55,6 @@ interface UseFormOpts<T> {
 	controlled?: boolean
 }
 
-//export function useForm<T>(type: t.HasProps, { init, formID, controlled }: UseFormOpts<T> = {}): UseForm<T> {
 export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID, controlled }: UseFormOpts<T> = {}): UseForm<T> {
 	let tmpInit: Record<string, FieldState<T>> = {}
 	if (init) for (let name in type.props) (tmpInit)[name] = { dv: (init as any)[name], v: (init as any)[name] }
@@ -87,7 +86,7 @@ export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID,
 
 	const validateField = React.useCallback(function validateField(value: any, fieldName: keyof T) {
 		// const flds = validate(value, (<any>type.props)[fieldName])
-		if (validateValue(value, (type.props as any)[fieldName])) {
+		if (validateValue(value, type.props[fieldName])) {
 			setForm(form => (form && { ...form, [fieldName]: { ...form[fieldName], error: false } }))
 		} else {
 			setForm(form => (form && { ...form, [fieldName]: { ...form[fieldName], error: true } }))
