@@ -1,6 +1,6 @@
 {
   "name": "@symbion/simple-form",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Simple form library for React, TypeScript and io-ts",
   "main": "lib/index.js",
   "module": "esm/index.js",
