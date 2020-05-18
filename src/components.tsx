@@ -6,14 +6,13 @@ import { InputPropsBase, UseForm } from './react-form'
 // Form //
 //////////
 interface FormProps<T> {
-	id: string
 	className?: string
 	onSubmit?: () => void
 	onReset?: () => void
 	form: UseForm<T>
 }
 
-export function Form<T>({ className, onSubmit, onReset, children, ...props }: React.PropsWithChildren<FormProps<T>>) {
+export function Form<T>({ className, form, onSubmit, onReset, children, ...props }: React.PropsWithChildren<FormProps<T>>) {
 	const handleSubmit = React.useCallback(function handleSubmit(evt) {
 		evt.preventDefault()
 		return onSubmit ? onSubmit() : void 0
@@ -25,6 +24,7 @@ export function Form<T>({ className, onSubmit, onReset, children, ...props }: Re
 	}, [onReset])
 
 	return <form {...props}
+		id={form.formID}
 		className={'needs-validation' + className ? ` ${className}` : ''}
 		noValidate
 		onSubmit={handleSubmit}
