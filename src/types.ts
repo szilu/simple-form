@@ -103,6 +103,22 @@ export class FalseType extends t.Type<false> {
 export interface FalseC extends FalseType {}
 export const falseType: FalseC = new FalseType()
 
+// Date type
+export class DateType extends t.Type<Date> {
+	readonly _tag: 'DateType' = 'DateType'
+	constructor() {
+		super(
+			'date',
+			(u): u is Date => !isNaN(new Date(u as any).valueOf()),
+			(u, c) => (this.is(u) ? t.success(new Date(u)) : t.failure(u, c)),
+			t.identity
+		)
+	}
+}
+
+export interface DateC extends t.Type<Date, Date, unknown> {}
+export const date: DateC = new DateType()
+
 ////////////////////////////
 // Form Model type helper //
 ////////////////////////////
