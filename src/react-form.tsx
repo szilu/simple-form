@@ -41,6 +41,7 @@ export interface UseForm<T> {
 	state: FormState<T> | undefined
 	formID: string
 	controlled: boolean
+	required: Record<keyof T, boolean>
 	onChange: (value: string | number | boolean | undefined, name: string) => void
 	onBlur: (name: string) => void
 	valid: () => boolean	// Array<keyof T> | null
@@ -61,6 +62,15 @@ export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID,
 	let initialState: FormState<T> = tmpInit as FormState<T>
 	const x: Partial<Record<keyof T, string>> = {}
 	const [form, setForm] = React.useState<FormState<T> | undefined>(init && initialState)
+
+	const required = React.useMemo(function required() {
+		const r: Record<keyof T, boolean> = {} as any
+		for (const name in type.props) {
+			const res = type.props[name].decode(undefined)
+			if (!isRight(res)) r[name as keyof T] = true
+		}
+		return r
+	}, [type])
 
 	const set = React.useCallback(function set(values: Partial<T>) {
 		let tmp: any = {}
@@ -95,20 +105,17 @@ export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID,
 
 	const valid = React.useCallback(function valid() {
 		const values = get()
-		console.log('validateForm', values)
 		const flds = validateForm(values, type)
 		if (flds) {
 			for (let name of flds) {
 				if (flds) setForm(form => (form && { ...form, [name]: { ...form[name], error: true } }))
 			}
 		}
-		console.log('Invalid fields', flds)
 		if (flds) {
 			// Focus first child
 			const formEl = document.getElementById(formID || '') as HTMLFormElement
 			for (const el of formEl.elements) {
 				const f = el as any
-				console.log('F', f.name, !!f.focus)
 				if (f.name && f.focus && (flds as string[]).indexOf(f.name) >= 0) {
 					f.focus()
 					break
@@ -135,6 +142,7 @@ export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID,
 		state: form,
 		formID: formID || '',
 		controlled: !!controlled,
+		required,
 		onChange: handleChange,
 		onBlur: handleBlur,
 		valid,
@@ -170,6 +178,7 @@ export function withForm<V extends string | number | boolean, P extends InputPro
 			controlled={form.controlled}
 			value={form.state && form.state[name]?.v as unknown as V}
 			defaultValue={form.state && form.state[name]?.dv as unknown as V}
+			required={form.required && form.required[name]}
 			error={form.state && form.state[name]?.error && (error || true)}
 			onChange={form.onChange}
 			onBlur={form.onBlur}
