@@ -4,7 +4,8 @@ import { PathReporter } from 'io-ts/lib/PathReporter'
 import { Reporter } from 'io-ts/lib/Reporter'
 
 import * as React from 'react'
-import debounce from 'lodash/debounce'
+//import debounce from 'lodash/debounce'
+import debounce from 'debounce'
 
 //////////////////////
 // IO-TS validation //
