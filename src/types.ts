@@ -130,7 +130,7 @@ export type Validator<T = unknown> = (value: T) => boolean | Promise<boolean>
 
 interface FormModelArg<T> {
 	type: t.Type<T>
-	valid?: Validator<T> | { compose: () => Validator<Exclude<T, undefined>> }
+	valid?: Validator<Exclude<T, undefined>> | { compose: () => Validator<Exclude<T, undefined>> }
 }
 
 export interface FormModel<T> {

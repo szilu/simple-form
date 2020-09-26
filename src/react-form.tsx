@@ -1,4 +1,3 @@
-//import * as t from 'io-ts'
 import * as t from './types'
 import { fold, isRight } from 'fp-ts/lib/Either'
 import { PathReporter } from 'io-ts/lib/PathReporter'
@@ -34,7 +33,7 @@ export async function validateForm<T, K extends keyof T>(form: FormState<T>, req
 		const fld = form[name as keyof T]
 		switch (fld.error) {
 		case undefined:
-			if (fld.v != null && !await validateValue(fld.v, reqType.props[name], validator && validator[name as keyof T])) errors.push(name as keyof T)
+			if (!await validateValue(fld.v, reqType.props[name], validator && validator[name as keyof T])) errors.push(name as keyof T)
 			break
 		case true:
 			errors.push(name as keyof T)
