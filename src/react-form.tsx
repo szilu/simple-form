@@ -23,18 +23,18 @@ type FormState<T> = {
 //////////////////////
 // IO-TS validation //
 //////////////////////
-async function validateValue<T = string>(value: T, type: t.Type<any>, validator?: t.Validator): Promise<boolean> {
+async function validateValue<T = string>(value: T, type: t.Type<any>, validator?: t.Validator<Exclude<T, undefined>>): Promise<boolean> {
 	const result = type.decode(value)
-	return isRight(result) && (!validator || value == null || await validator(value))
+	return isRight(result) && (!validator || value == undefined || await validator(value as Exclude<T, undefined>))
 }
 
-export async function validateForm<T, K extends keyof T>(form: FormState<T>, reqType: t.TypeC<{ [K in keyof T]: t.Type<T[K]> }>, validator?: {[K in keyof T]?: t.Validator}): Promise<Array<keyof T> | null> {
+export async function validateForm<T, K extends keyof T>(form: FormState<T>, reqType: t.TypeC<{ [K in keyof T]: t.Type<T[K]> }>, validator?: {[K in keyof T]?: t.Validator<Exclude<T[K], undefined>>}): Promise<Array<keyof T> | null> {
 	let errors: Array<keyof T> = []
 	for (const name in reqType.props) {
 		const fld = form[name as keyof T]
 		switch (fld.error) {
 		case undefined:
-			if (!await validateValue(fld.v, reqType.props[name], validator && validator[name as keyof T])) errors.push(name as keyof T)
+			if (fld.v != null && !await validateValue(fld.v, reqType.props[name], validator && validator[name as keyof T])) errors.push(name as keyof T)
 			break
 		case true:
 			errors.push(name as keyof T)

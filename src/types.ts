@@ -17,7 +17,7 @@ export function literals(...values: string[]) {
 // "optional" helper for optional values
 export const undefinedType: t.UndefinedC = new t.UndefinedType()
 
-export function optional(type: t.Any) {
+export function optional<T>(type: t.Type<T>): t.Type<T | undefined> {
 	return t.union([type, undefinedType])
 }
 
@@ -126,11 +126,11 @@ export const date: DateC = new DateType()
 // The base type is used to contain any invalid state,
 // the strict type is for validated data
 
-export type Validator = (value: unknown) => boolean | Promise<boolean>
+export type Validator<T = unknown> = (value: T) => boolean | Promise<boolean>
 
-interface FormModelArg<T extends t.Any> {
-	type: T
-	valid?: Validator
+interface FormModelArg<T> {
+	type: t.Type<T>
+	valid?: Validator<T> | { compose: () => Validator<Exclude<T, undefined>> }
 }
 
 export interface FormModel<T> {
@@ -141,16 +141,17 @@ export interface FormModel<T> {
 		[K in keyof T]: t.Type<T[K]>
 	}>
 	validator: {
-		[K in keyof T]?: Validator
+		[K in keyof T]?: Validator<Exclude<T[K], undefined>>
 	}
 }
 
-export function formModel<T extends {[K: string]: t.Any}>(props: { [K in keyof T]: FormModelArg<T[K]> }): FormModel<T> {
+export function formModel<T extends {[K: string]: unknown}>(props: { [K in keyof T]: FormModelArg<T[K]> }): FormModel<T> {
 	let type: { [K in keyof T]: t.Type<T[K]> } = {} as any
-	let validator: { [K in keyof T]?: Validator } = {}
+	let validator: { [K in keyof T]?: Validator<Exclude<T[K], undefined>> } = {}
 	for (const n in props) {
 		type[n] = props[n].type
-		validator[n] = props[n].valid
+		const valid = props[n].valid
+		validator[n] = !valid || (typeof valid === 'function') ? valid : valid.compose()
 	}
 	return { base: t.partial(type), strict: t.type(type), validator }
 }
