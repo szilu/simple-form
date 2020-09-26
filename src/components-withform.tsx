@@ -1,13 +1,11 @@
 import * as C from './components'
 import { withForm } from './react-form'
 
-import { Form, FieldSet, Button } from './components'
-
 export default function typedInputs<T>() {
 	return {
-		Form,
-		FieldSet,
-		Button,
+		Form: C.Form,
+		FieldSet: C.FieldSet,
+		Button: C.Button,
 		TextInput: withForm<string, C.TextInputProps, T>(C.TextInput),
 		NumberInput: withForm<number, C.NumberInputProps, T>(C.NumberInput),
 		DateInput: withForm<string, C.DateInputProps, T>(C.DateInput),

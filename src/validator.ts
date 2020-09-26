@@ -30,13 +30,13 @@ export class ValidatorBase<T = unknown> {
 	}
 
 	in(list: T[]) {
-		return Object.create(Object.getPrototypeOf(this), { parent: {value: this}, validate: {value: (v: T) => list.indexOf(v) >= 0 }});
+		return Object.create(Object.getPrototypeOf(this), { parent: { value: this }, validate: { value: (v: T) => list.indexOf(v) >= 0 } })
 	}
 }
 
 export class NumberValidator extends ValidatorBase<number> {
 	integer() {
-		return new NumberValidator((v: number) => v == Math.round(v), this)
+		return new NumberValidator((v: number) => v === Math.round(v), this)
 	}
 
 	positive() {
@@ -58,7 +58,7 @@ export class NumberValidator extends ValidatorBase<number> {
 
 export class StringValidator extends ValidatorBase<string> {
 	length(len: number) {
-		return new StringValidator((v: string) => v.length == len)
+		return new StringValidator((v: string) => v.length === len)
 	}
 
 	minLength(len: number) {
@@ -104,19 +104,19 @@ export class DateValidator extends ValidatorBase<string> {
 
 export const V = {
 	number: function number() {
-		return new NumberValidator((v: number) => (typeof v == 'number' && !Number.isNaN(v)))
+		return new NumberValidator((v: number) => (typeof v === 'number' && !Number.isNaN(v)))
 	},
 
 	string: function string() {
-		return new StringValidator((v: string) => typeof v == 'string')
+		return new StringValidator((v: string) => typeof v === 'string')
 	},
 
 	boolean: function boolean() {
-		return new BooleanValidator((v: boolean) => typeof v == 'boolean')
+		return new BooleanValidator((v: boolean) => typeof v === 'boolean')
 	},
 
 	date: function date() {
-		return new DateValidator((v: string) => typeof v == 'string' && !Number.isNaN(Date.parse(v)))
+		return new DateValidator((v: string) => typeof v === 'string' && !Number.isNaN(Date.parse(v)))
 	}
 }
 

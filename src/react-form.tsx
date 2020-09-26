@@ -24,7 +24,7 @@ type FormState<T> = {
 //////////////////////
 async function validateValue<T = string>(value: T, type: t.Type<any>, validator?: t.Validator<Exclude<T, undefined>>): Promise<boolean> {
 	const result = type.decode(value)
-	return isRight(result) && (!validator || value == undefined || await validator(value as Exclude<T, undefined>))
+	return isRight(result) && (!validator || value === undefined || validator(value as Exclude<T, undefined>))
 }
 
 export async function validateForm<T, K extends keyof T>(form: FormState<T>, reqType: t.TypeC<{ [K in keyof T]: t.Type<T[K]> }>, validator?: {[K in keyof T]?: t.Validator<Exclude<T[K], undefined>>}): Promise<Array<keyof T> | null> {
@@ -137,7 +137,7 @@ export function useForm<T>(formModel: t.FormModel<T>, { init, formID, controlled
 			} else {
 				setForm(form => (form && { ...form, [fieldName]: { ...form[fieldName], error: true } }))
 			}
-		})()
+		})().then().catch()
 	}, [type])
 
 	const valid = React.useCallback(async function valid() {

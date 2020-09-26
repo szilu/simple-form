@@ -278,7 +278,7 @@ export function Select<V extends string | number | string[] | undefined>({ class
 			value={controlled ? value : undefined}
 			defaultValue={controlled ? undefined : defaultValue}
 			className={'custom-select' + (error ? ' is-invalid' : error === false ? ' is-valid' : '')}
-			onChange={evt => onChange((type == 'string' ? '' + evt.target.value : type == 'number' ? +evt.target.value : evt.target.value) as V || undefined, evt.target.name)}
+			onChange={evt => onChange((type === 'string' ? '' + evt.target.value : type === 'number' ? +evt.target.value : evt.target.value) as V || undefined, evt.target.name)}
 			onBlur={onBlur ? evt => onBlur(evt.target.name) : undefined}
 			aria-describedby={legend && (id + '-legend')}
 		>
@@ -291,8 +291,8 @@ export function Select<V extends string | number | string[] | undefined>({ class
 
 export type TextSelectProps = SelectProps<string>
 export type NumberSelectProps = SelectProps<number>
-export function TextSelect(props: SelectProps<string>) { return Select<string>({...props, type: 'string'}) }
-export function NumberSelect(props: SelectProps<number>) { return Select<number>({...props, type: 'number'}) }
+export function TextSelect(props: SelectProps<string>) { return Select<string>({ ...props, type: 'string' }) }
+export function NumberSelect(props: SelectProps<number>) { return Select<number>({ ...props, type: 'number' }) }
 
 ///////////
 // Color //
