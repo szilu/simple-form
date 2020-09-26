@@ -76,15 +76,47 @@ export class StringValidator extends ValidatorBase<string> {
 	matches(pattern: RegExp) {
 		return new StringValidator((v: string) => pattern.test(v))
 	}
+
+	email() {
+		return this.matches(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)
+	}
+}
+
+export class BooleanValidator extends ValidatorBase<boolean> {
+	true() {
+		return new BooleanValidator((v: boolean) => v)
+	}
+
+	false() {
+		return new BooleanValidator((v: boolean) => !v)
+	}
+}
+
+export class DateValidator extends ValidatorBase<string> {
+	min(min: Date = new Date()) {
+		return new DateValidator((v: string) => Date.parse(v) >= min.valueOf())
+	}
+
+	max(max: Date = new Date()) {
+		return new DateValidator((v: string) => Date.parse(v) <= max.valueOf())
+	}
 }
 
 export const V = {
-	number: function () {
+	number: function number() {
 		return new NumberValidator((v: number) => (typeof v == 'number' && !Number.isNaN(v)))
 	},
 
-	string: function () {
+	string: function string() {
 		return new StringValidator((v: string) => typeof v == 'string')
+	},
+
+	boolean: function boolean() {
+		return new BooleanValidator((v: boolean) => typeof v == 'boolean')
+	},
+
+	date: function date() {
+		return new DateValidator((v: string) => typeof v == 'string' && !Number.isNaN(Date.parse(v)))
 	}
 }
 
