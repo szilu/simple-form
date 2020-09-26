@@ -1,29 +1,11 @@
-import * as t from 'io-ts'
+//import * as t from 'io-ts'
+import * as t from './types'
 import { fold, isRight } from 'fp-ts/lib/Either'
 import { PathReporter } from 'io-ts/lib/PathReporter'
 import { Reporter } from 'io-ts/lib/Reporter'
 
 import * as React from 'react'
-//import debounce from 'lodash/debounce'
 import debounce from 'debounce'
-
-//////////////////////
-// IO-TS validation //
-//////////////////////
-function validateValue<T = string>(value: T, type: t.Type<any>): boolean {
-	const result = type.decode(value)
-	console.log('Valid?', value, type, result)
-	return isRight(result)
-}
-
-export function validateForm<T = string>(value: T, reqType: t.TypeC<t.AnyProps> | t.PartialC<t.AnyProps>): Array<keyof T> | null {
-	let errors: Array<keyof T> = []
-	for (const name in reqType.props) {
-		const result = reqType.props[name].decode((value as any)[name])
-		if (!isRight(result)) errors.push(name as keyof T)
-	}
-	return errors.length ? errors : null
-}
 
 ////////////////
 // Form state //
@@ -38,6 +20,34 @@ type FormState<T> = {
 	[K in keyof T]: FieldState<T, K>
 }
 
+//////////////////////
+// IO-TS validation //
+//////////////////////
+async function validateValue<T = string>(value: T, type: t.Type<any>, validator?: t.Validator): Promise<boolean> {
+	const result = type.decode(value)
+	return isRight(result) && (!validator || value == null || await validator(value))
+}
+
+export async function validateForm<T, K extends keyof T>(form: FormState<T>, reqType: t.TypeC<{ [K in keyof T]: t.Type<T[K]> }>, validator?: {[K in keyof T]?: t.Validator}): Promise<Array<keyof T> | null> {
+	let errors: Array<keyof T> = []
+	for (const name in reqType.props) {
+		const fld = form[name as keyof T]
+		switch (fld.error) {
+		case undefined:
+			if (!await validateValue(fld.v, reqType.props[name], validator && validator[name as keyof T])) errors.push(name as keyof T)
+			break
+		case true:
+			errors.push(name as keyof T)
+			break
+		case false:
+		}
+	}
+	return errors.length ? errors : null
+}
+
+//////////////////
+// useForm hook //
+//////////////////
 export interface UseForm<T> {
 	state: FormState<T> | undefined
 	formID: string
@@ -45,9 +55,11 @@ export interface UseForm<T> {
 	required: Record<keyof T, boolean>
 	onChange: (value: string | number | boolean | undefined, name: string) => void
 	onBlur: (name: string) => void
-	valid: () => boolean	// Array<keyof T> | null
+	valid: () => Promise<boolean>	// Array<keyof T> | null
 	set: (values: Partial<T>) => void
+	setStrict: (values: unknown) => void
 	get: () => Partial<T>
+	getStrict: () => T
 	reset: () => void
 }
 
@@ -55,13 +67,15 @@ interface UseFormOpts<T> {
 	init?: Partial<T>
 	formID?: string
 	controlled?: boolean
+	validatorDebounce?: number
 }
 
-export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID, controlled }: UseFormOpts<T> = {}): UseForm<T> {
+export function useForm<T>(formModel: t.FormModel<T>, { init, formID, controlled, validatorDebounce }: UseFormOpts<T> = {}): UseForm<T> {
+	const type = formModel.strict
+	const validator = formModel.validator
 	let tmpInit: Record<string, FieldState<T>> = {}
 	if (init) for (let name in type.props) (tmpInit)[name] = { dv: (init as any)[name], v: (init as any)[name] }
 	let initialState: FormState<T> = tmpInit as FormState<T>
-	const x: Partial<Record<keyof T, string>> = {}
 	const [form, setForm] = React.useState<FormState<T> | undefined>(init && initialState)
 
 	const required = React.useMemo(function required() {
@@ -79,11 +93,32 @@ export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID,
 		setForm(tmp as FormState<T>)
 	}, [type, setForm])
 
+	const setStrict = React.useCallback(function setDecode(unknownValues: unknown) {
+		const res = t.partial(type.props).decode(unknownValues)
+		if (t.isRight(res)) {
+			set(res.right as Partial<T>)
+		} else {
+			console.log('Decode error', type.props, res)
+			throw new Error('Decode error')
+		}
+	}, [set])
+
 	const get = React.useCallback(function get(): T {
 		let ret: any = {}
 		for (let name in type.props) ret[name] = form && form[name as keyof T].v
 		return ret
 	}, [type, form])
+
+	const getStrict = React.useCallback(function getStrict(): T {
+		const ret = get()
+		const res = type.decode(ret)
+		if (t.isRight(res)) {
+			return ret
+		} else {
+			console.log('Decode error', res)
+			throw new Error('Decode error')
+		}
+	}, [get])
 
 	const reset = React.useCallback(function reset() {
 		setForm(form => {
@@ -96,17 +131,19 @@ export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID,
 	}, [type, setForm])
 
 	const validateField = React.useCallback(function validateField(value: any, fieldName: keyof T) {
-		// const flds = validate(value, (<any>type.props)[fieldName])
-		if (validateValue(value, type.props[fieldName])) {
-			setForm(form => (form && { ...form, [fieldName]: { ...form[fieldName], error: false } }))
-		} else {
-			setForm(form => (form && { ...form, [fieldName]: { ...form[fieldName], error: true } }))
-		}
+		(async function () {
+			const valid = await validateValue(value, type.props[fieldName], validator && validator[fieldName])
+			if (valid) {
+				setForm(form => (form && { ...form, [fieldName]: { ...form[fieldName], error: false } }))
+			} else {
+				setForm(form => (form && { ...form, [fieldName]: { ...form[fieldName], error: true } }))
+			}
+		})()
 	}, [type])
 
-	const valid = React.useCallback(function valid() {
-		const values = get()
-		const flds = validateForm(values, type)
+	const valid = React.useCallback(async function valid() {
+		if (!form) return false
+		const flds = await validateForm(form, type, validator)
 		if (flds) {
 			for (let name of flds) {
 				if (flds) setForm(form => (form && { ...form, [name]: { ...form[name], error: true } }))
@@ -124,9 +161,9 @@ export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID,
 			}
 		}
 		return !flds
-	}, [type, get, setForm, formID])
+	}, [form, type, get, setForm, formID])
 
-	const debounceValidator = React.useCallback(debounce(validateField, 1000), [])
+	const debounceValidator = React.useCallback(debounce(validateField, validatorDebounce || 500), [])
 
 	const handleChange = React.useCallback(function handleChange(value: any, name: string) {
 		const n = name as keyof T
@@ -148,7 +185,9 @@ export function useForm<T>(type: t.TypeC<any> | t.PartialC<any>, { init, formID,
 		onBlur: handleBlur,
 		valid,
 		set,
+		setStrict,
 		get,
+		getStrict,
 		reset
 	}
 }

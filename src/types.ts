@@ -126,19 +126,33 @@ export const date: DateC = new DateType()
 // The base type is used to contain any invalid state,
 // the strict type is for validated data
 
-type FormModel<T> = {
-	base: t.Any
-	strict?: t.Any
+export type Validator = (value: unknown) => boolean | Promise<boolean>
+
+interface FormModelArg<T extends t.Any> {
+	type: T
+	valid?: Validator
 }
 
-export function formModel<T>(props: { [K in keyof T]: FormModel<T[K]> }) {
-	let base: { [K in keyof T]: t.Type<T[K]> } = {} as any
-	let strict: { [K in keyof T]: t.Type<T[K]> } = {} as any
-	for (const n in props) {
-		base[n] = props[n].base
-		strict[n] = props[n].strict || optional(props[n].base)
+export interface FormModel<T> {
+	base: t.PartialC<{
+		[K in keyof T]: t.Type<T[K]>
+	}>
+	strict: t.TypeC<{
+		[K in keyof T]: t.Type<T[K]>
+	}>
+	validator: {
+		[K in keyof T]?: Validator
 	}
-	return { base: t.partial(base), strict: t.type(strict) }
+}
+
+export function formModel<T extends {[K: string]: t.Any}>(props: { [K in keyof T]: FormModelArg<T[K]> }): FormModel<T> {
+	let type: { [K in keyof T]: t.Type<T[K]> } = {} as any
+	let validator: { [K in keyof T]?: Validator } = {}
+	for (const n in props) {
+		type[n] = props[n].type
+		validator[n] = props[n].valid
+	}
+	return { base: t.partial(type), strict: t.type(type), validator }
 }
 
 // vim: ts=4
