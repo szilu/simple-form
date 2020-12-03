@@ -128,8 +128,13 @@ export const date: DateC = new DateType()
 
 export type Validator<T = unknown> = (value: T) => boolean | Promise<boolean>
 
-interface FormModelArg<T> {
-	type: t.Type<T>
+interface FormModelType<T> {
+	ts: t.Type<T>
+	valid?: Validator<Exclude<T, undefined>> | { compose: () => Validator<Exclude<T, undefined>> }
+}
+
+interface FormModelField<T> {
+	type: FormModelType<T>
 	valid?: Validator<Exclude<T, undefined>> | { compose: () => Validator<Exclude<T, undefined>> }
 }
 
@@ -145,12 +150,12 @@ export interface FormModel<T> {
 	}
 }
 
-export function formModel<T extends {[K: string]: unknown}>(props: { [K in keyof T]: FormModelArg<T[K]> }): FormModel<T> {
+export function formModel<T extends {[K: string]: unknown}>(props: { [K in keyof T]: FormModelField<T[K]> }): FormModel<T> {
 	let type: { [K in keyof T]: t.Type<T[K]> } = {} as any
 	let validator: { [K in keyof T]?: Validator<Exclude<T[K], undefined>> } = {}
 	for (const n in props) {
-		type[n] = props[n].type
-		const valid = props[n].valid
+		type[n] = props[n].type.ts
+		const valid = props[n].type.valid
 		validator[n] = !valid || (typeof valid === 'function') ? valid : valid.compose()
 	}
 	return { base: t.partial(type), strict: t.type(type), validator }

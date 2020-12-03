@@ -202,7 +202,7 @@ export interface InputPropsBase<V> {
 	onBlur?: (name: string) => void
 }
 
-type WithFormProps<T> = {
+export type WithFormProps<T> = {
 	name: keyof FormState<T>
 	form: UseForm<T>
 	error?: string
