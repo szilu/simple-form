@@ -6,6 +6,8 @@ import { Reporter } from 'io-ts/lib/Reporter'
 import * as React from 'react'
 import debounce from 'debounce'
 
+type Nullable<T> = { [P in keyof T]?: T[P] | null }
+
 ////////////////
 // Form state //
 ////////////////
@@ -58,6 +60,7 @@ export interface UseForm<T> {
 	set: (values: Partial<T>) => void
 	setStrict: (values: unknown) => void
 	get: () => Partial<T>
+	getChanges: () => Nullable<T>
 	getStrict: () => T
 	reset: () => void
 }
@@ -105,6 +108,13 @@ export function useForm<T>(formModel: t.FormModel<T>, { init, formID, controlled
 	const get = React.useCallback(function get(): T {
 		let ret: any = {}
 		for (let name in type.props) ret[name] = form && form[name as keyof T].v
+		return ret
+	}, [type, form])
+
+	const getChanges = React.useCallback(function getNull(): T {
+		let ret: any = {}
+		for (let name in type.props) ret[name] = form && form[name as keyof T].v !== undefined ? form[name as keyof T].v : null
+		console.log('getChanges', form, ret)
 		return ret
 	}, [type, form])
 
@@ -186,6 +196,7 @@ export function useForm<T>(formModel: t.FormModel<T>, { init, formID, controlled
 		set,
 		setStrict,
 		get,
+		getChanges,
 		getStrict,
 		reset
 	}
@@ -209,7 +220,7 @@ export type WithFormProps<T> = {
 }
 
 export function withForm<V extends string | number | boolean, P extends InputPropsBase<V> = InputPropsBase<V>, T = any>(InputComponent: React.ComponentType<P>) {
-	return function WithForm({ name, form, error, ...props }: Omit<P, keyof InputPropsBase<V>> & WithFormProps<T>) {
+	return function WithForm({ name, form, error, ...props }: Omit<P, keyof InputPropsBase<any>> & WithFormProps<T>) {
 		// FIXME type assertion
 		return <InputComponent {...props as unknown as P}
 			name={name as string}
