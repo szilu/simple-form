@@ -3,7 +3,7 @@ Symbion Simple Form Library
 
 Description
 -----------
-A simple form library for React, TypeScript and io-ts.
+A simple form library for React and TypeScript.
 
 Installation
 ------------
