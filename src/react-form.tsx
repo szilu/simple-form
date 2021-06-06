@@ -1,10 +1,7 @@
-import * as t from './types'
-import { fold, isRight } from 'fp-ts/lib/Either'
-import { PathReporter } from 'io-ts/lib/PathReporter'
-import { Reporter } from 'io-ts/lib/Reporter'
-
 import * as React from 'react'
 import debounce from 'debounce'
+import * as t from '@symbion/runtype'
+import { Validator } from '@symbion/runtype/lib/validator'
 
 type Nullable<T> = { [P in keyof T]?: T[P] | null }
 
@@ -12,8 +9,8 @@ type Nullable<T> = { [P in keyof T]?: T[P] | null }
 // Form state //
 ////////////////
 interface FieldState<T, K extends keyof T = keyof T> {
-	dv: T[K],
-	v: T[K],
+	dv?: T[K],
+	v?: T[K],
 	error?: boolean
 }
 
@@ -21,21 +18,18 @@ type FormState<T> = {
 	[K in keyof T]: FieldState<T, K>
 }
 
-//////////////////////
-// IO-TS validation //
-//////////////////////
-async function validateValue<T = string>(value: T, type: t.Type<any>, validator?: t.Validator<Exclude<T, undefined>>): Promise<boolean> {
-	const result = type.decode(value)
-	return isRight(result) && (!validator || value === undefined || validator(value as Exclude<T, undefined>))
-}
-
-export async function validateForm<T, K extends keyof T>(form: FormState<T>, reqType: t.TypeC<{ [K in keyof T]: t.Type<T[K]> }>, validator?: {[K in keyof T]?: t.Validator<Exclude<T[K], undefined>>}): Promise<Array<keyof T> | null> {
+export async function validateForm<T extends { [K: string]: unknown }, S extends t.Schema<any, any, any>>(schema: S, state: FormState<T>): Promise<Array<keyof T> | null> {
 	let errors: Array<keyof T> = []
-	for (const name in reqType.props) {
-		const fld = form[name as keyof T]
+	for (const name in schema.props) {
+		const fld = state[name as keyof T]
 		switch (fld.error) {
 		case undefined:
-			if (!await validateValue(fld.v, reqType.props[name], validator && validator[name as keyof T])) errors.push(name as keyof T)
+			const prop = schema.props[name]
+			let res: t.Result = t.ok(undefined)
+
+			if (prop.type && prop.type.valid) res = await t.validate(state[name], prop.type.ts, prop.type.valid)
+			if (prop.type && t.isOk(res) && prop.valid) res = await t.validate(state[name], prop.type.ts, prop.valid)
+			if (t.isErr(res)) errors.push(name)
 			break
 		case true:
 			errors.push(name as keyof T)
@@ -58,7 +52,7 @@ export interface UseForm<T> {
 	onBlur: (name: string) => void
 	valid: () => Promise<boolean>	// Array<keyof T> | null
 	set: (values: Partial<T>) => void
-	setStrict: (values: unknown) => void
+	setStrict: (values: unknown, opts: t.DecoderOpts) => void
 	get: () => Partial<T>
 	getChanges: () => Nullable<T>
 	getStrict: () => T
@@ -72,57 +66,66 @@ interface UseFormOpts<T> {
 	validatorDebounce?: number
 }
 
-export function useForm<T>(formModel: t.FormModel<T>, { init, formID, controlled, validatorDebounce }: UseFormOpts<T> = {}): UseForm<T> {
-	const type = formModel.strict
-	const validator = formModel.validator
+export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T, GK extends KEYS>(
+	schema: t.Schema<T, KEYS, GK>,
+	{ init, formID, controlled, validatorDebounce }: UseFormOpts<T> = {}
+): UseForm<T> {
+	const strictType = t.schemaStrict(schema)
+	const partialType = t.schemaPartial(schema)
 	let tmpInit: Record<string, FieldState<T>> = {}
-	if (init) for (let name in type.props) (tmpInit)[name] = { dv: (init as any)[name], v: (init as any)[name] }
+	if (init) for (let name in schema.props) (tmpInit)[name] = { dv: (init)[name], v: (init)[name] }
 	let initialState: FormState<T> = tmpInit as FormState<T>
 	const [form, setForm] = React.useState<FormState<T> | undefined>(init && initialState)
 
 	const required = React.useMemo(function required() {
 		const r: Record<keyof T, boolean> = {} as any
-		for (const name in type.props) {
-			const res = type.props[name].decode(undefined)
-			if (!isRight(res)) r[name as keyof T] = true
+		for (const name in schema.props) {
+			const prop = schema.props[name]
+			if (prop.type) {
+				const res = prop.type.ts.decode(undefined, {})
+				if (t.isErr(res)) r[name as keyof T] = true
+			}
 		}
 		return r
-	}, [type])
+	}, [schema])
 
 	const set = React.useCallback(function set(values: Partial<T>) {
 		let tmp: any = {}
-		for (let name in type.props) tmp[name] = { dv: (values)[name as keyof T], v: (values)[name as keyof T] }
+		for (let name in schema.props) tmp[name] = { dv: (values)[name as keyof T], v: (values)[name as keyof T] }
 		setForm(tmp as FormState<T>)
-	}, [type, setForm])
+	}, [schema, setForm])
 
-	const setStrict = React.useCallback(function setDecode(unknownValues: unknown) {
-		const res = t.partial(type.props).decode(unknownValues)
-		if (t.isRight(res)) {
-			set(res.right as Partial<T>)
+	const setStrict = React.useCallback(function setStrict(unknownValues: unknown, opts?: t.DecoderOpts) {
+		const res = t.decode(partialType, unknownValues, opts)
+		if (t.isOk(res)) {
+			set(res.ok)
 		} else {
-			console.log('Decode error', type.props, res)
+			console.log('Decode error', res)
 			throw new Error('Decode error')
 		}
 	}, [set])
 
-	const get = React.useCallback(function get(): T {
+	const get = React.useCallback(function get(): Partial<T> {
 		let ret: any = {}
-		for (let name in type.props) ret[name] = form && form[name as keyof T].v
+		for (let name in schema.props) {
+			console.log('get', name, form && form[name as keyof T])
+			ret[name] = form && form[name as keyof T].v
+		}
 		return ret
-	}, [type, form])
+	}, [schema, form])
 
-	const getChanges = React.useCallback(function getNull(): T {
+	const getChanges = React.useCallback(function getChanges(): T {
 		let ret: any = {}
-		for (let name in type.props) ret[name] = form && form[name as keyof T].v !== undefined ? form[name as keyof T].v : null
-		console.log('getChanges', form, ret)
+		if (!form) return ret
+		for (let name in schema.props) ret[name] = form[name as keyof T].v !== undefined ? form[name as keyof T].v : null
 		return ret
-	}, [type, form])
+	}, [schema, form])
 
 	const getStrict = React.useCallback(function getStrict(): T {
 		const ret = get()
-		const res = type.decode(ret)
-		if (t.isRight(res)) {
-			return ret
+		const res = strictType.decode(ret, {})
+		if (t.isOk(res)) {
+			return res.ok as T
 		} else {
 			console.log('Decode error', res)
 			throw new Error('Decode error')
@@ -131,28 +134,30 @@ export function useForm<T>(formModel: t.FormModel<T>, { init, formID, controlled
 
 	const reset = React.useCallback(function reset() {
 		setForm(form => {
-			if (form) {
-				let tmp: Record<string, FieldState<T>> = {}
-				for (let name in type.props) tmp[name] = { ...form[name as keyof T], v: form[name as keyof T].dv, error: undefined }
-				return tmp as FormState<T>
-			}
+			if (!form) return form
+			let tmp: Record<string, FieldState<T>> = {}
+			for (let name in schema.props) tmp[name] = { ...form[name as keyof T], v: form[name as keyof T].dv, error: undefined }
+			return tmp as FormState<T>
 		})
-	}, [type, setForm])
+	}, [schema, setForm])
 
 	const validateField = React.useCallback(function validateField(value: any, fieldName: keyof T) {
 		(async function () {
-			const valid = await validateValue(value, type.props[fieldName], validator && validator[fieldName])
-			if (valid) {
+			const field = schema.props[fieldName]
+			let res: t.Result = t.ok(undefined)
+			if (field.type && field.type.valid) res = await t.validate(value, field.type.ts, field.type.valid)
+			if (field.type && t.isOk(res) && field.valid) res = await t.validate(value, field.type.ts, field.valid)
+			if (t.isOk(res)) {
 				setForm(form => (form && { ...form, [fieldName]: { ...form[fieldName], error: false } }))
 			} else {
 				setForm(form => (form && { ...form, [fieldName]: { ...form[fieldName], error: true } }))
 			}
 		})().then().catch()
-	}, [type])
+	}, [schema])
 
 	const valid = React.useCallback(async function valid() {
 		if (!form) return false
-		const flds = await validateForm(form, type, validator)
+		const flds = await validateForm<T, t.Schema<T, KEYS, GK>>(schema, form)
 		if (flds) {
 			for (let name of flds) {
 				if (flds) setForm(form => (form && { ...form, [name]: { ...form[name], error: true } }))
@@ -170,7 +175,7 @@ export function useForm<T>(formModel: t.FormModel<T>, { init, formID, controlled
 			}
 		}
 		return !flds
-	}, [form, type, get, setForm, formID])
+	}, [schema, get, setForm, formID])
 
 	const debounceValidator = React.useCallback(debounce(validateField, validatorDebounce || 500), [])
 
@@ -205,7 +210,7 @@ export function useForm<T>(formModel: t.FormModel<T>, { init, formID, controlled
 export interface InputPropsBase<V> {
 	formID?: string
 	name: string
-	controlled: boolean
+	controlled?: boolean
 	value?: V
 	defaultValue?: V
 	error?: string | boolean

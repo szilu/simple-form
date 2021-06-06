@@ -19,7 +19,7 @@ export function Form<T>({ className, form, onSubmit, onReset, children, ...props
 	}, [onSubmit])
 
 	const handleReset = React.useCallback(function handleReset(evt) {
-		evt.preventDefault()
+		if (form.controlled) evt.preventDefault()
 		return onReset ? onReset() : void 0
 	}, [onReset])
 
@@ -94,7 +94,7 @@ export interface TextInputProps extends InputProps<string> {
 export function TextInput({ className, name, formID, controlled, value, defaultValue, label, error, legend, type, required, onChange, onBlur, ...props }: React.PropsWithChildren<TextInputProps>) {
 	const id = formID ? `${formID}-${name}` : name
 	return <div className={'form-group' + (className ? ` ${className}` : '')}>
-		<label htmlFor={id}>{label}{required ? <span className='text-danger'>*</span> : null}</label>
+		<label htmlFor={id}>{label}{required ? <span className="text-danger">*</span> : null}</label>
 		<input {...props}
 			id={id}
 			name={name}
@@ -107,8 +107,8 @@ export function TextInput({ className, name, formID, controlled, value, defaultV
 			onBlur={onBlur ? (evt: React.FocusEvent<HTMLInputElement>) => onBlur(evt.target.name) : undefined}
 			aria-describedby={legend && (id + '-legend')}
 		/>
-		<legend id={id + '-legend'} className='form-text text-muted'>{legend}</legend>
-		{error && <div className='invalid-feedback'>{error}</div>}
+		<legend id={id + '-legend'} className="form-text text-muted">{legend}</legend>
+		{error && <div className="invalid-feedback">{error}</div>}
 	</div>
 }
 
@@ -125,7 +125,7 @@ export interface NumberInputProps extends InputProps<number> {
 export function NumberInput({ className, name, formID, controlled, value, defaultValue, label, error, legend, type, required, onChange, onBlur, ...props }: NumberInputProps) {
 	const id = formID ? `${formID}-${name}` : name
 	return <div className={'form-group' + (className ? ` ${className}` : '')}>
-		<label htmlFor={id}>{label}{required ? <span className='text-danger'>*</span> : null}</label>
+		<label htmlFor={id}>{label}{required ? <span className="text-danger">*</span> : null}</label>
 		<input {...props}
 			id={id}
 			name={name}
@@ -141,8 +141,8 @@ export function NumberInput({ className, name, formID, controlled, value, defaul
 			onBlur={onBlur ? (evt: React.FocusEvent<HTMLInputElement>) => onBlur(evt.target.name) : undefined}
 			aria-describedby={legend && (id + '-legend')}
 		/>
-		<legend id={id + '-legend'} className='form-text text-muted'>{legend}</legend>
-		{error && <div className='invalid-feedback'>{error}</div>}
+		<legend id={id + '-legend'} className="form-text text-muted">{legend}</legend>
+		{error && <div className="invalid-feedback">{error}</div>}
 	</div>
 }
 
@@ -158,12 +158,12 @@ export interface DateInputProps extends InputProps<string> {
 export function DateInput({ className, name, formID, controlled, value, defaultValue, label, error, legend, required, onChange, onBlur, ...props }: React.PropsWithChildren<DateInputProps>) {
 	const id = formID ? `${formID}-${name}` : name
 	return <div className={'form-group' + (className ? ` ${className}` : '')}>
-		<label htmlFor={id}>{label}{required ? <span className='text-danger'>*</span> : null}</label>
+		<label htmlFor={id}>{label}{required ? <span className="text-danger">*</span> : null}</label>
 		<input
 			{...props}
 			id={id}
 			name={name}
-			type='date'
+			type="date"
 			className={'form-control' + (error ? ' is-invalid' : error === false ? ' is-valid' : '')}
 			required={required}
 			value={controlled ? value : undefined}
@@ -172,8 +172,8 @@ export function DateInput({ className, name, formID, controlled, value, defaultV
 			onBlur={onBlur ? (evt: React.FocusEvent<HTMLInputElement>) => onBlur(evt.target.name) : undefined}
 			aria-describedby={legend && (id + '-legend')}
 		/>
-		<legend id={id + '-legend'} className='form-text text-muted'>{legend}</legend>
-		{error && <div className='invalid-feedback'>{error}</div>}
+		<legend id={id + '-legend'} className="form-text text-muted">{legend}</legend>
+		{error && <div className="invalid-feedback">{error}</div>}
 	</div>
 }
 
@@ -188,7 +188,7 @@ export function CheckBox({ className, name, formID, controlled, required, value,
 		<input {...props}
 			id={id}
 			name={name}
-			type='checkbox'
+			type="checkbox"
 			checked={controlled ? value : undefined}
 			defaultChecked={defaultValue}
 			className={'form-check-input' + (error ? ' is-invalid' : error === false ? ' is-valid' : '')}
@@ -196,9 +196,9 @@ export function CheckBox({ className, name, formID, controlled, required, value,
 			onBlur={onBlur ? (evt: React.FocusEvent<HTMLInputElement>) => onBlur(evt.target.name) : undefined}
 			aria-describedby={legend && (id + '-legend')}
 		/>
-		<label htmlFor={id} className='form-check-label'>{label}{required ? <span className='text-danger'>*</span> : null}</label>
-		<legend id={id + '-legend'} className='form-text text-muted'>{legend}</legend>
-		{error && <div className='invalid-feedback'>{error}</div>}
+		<label htmlFor={id} className="form-check-label">{label}{required ? <span className="text-danger">*</span> : null}</label>
+		<legend id={id + '-legend'} className="form-text text-muted">{legend}</legend>
+		{error && <div className="invalid-feedback">{error}</div>}
 	</div>
 }
 
@@ -213,17 +213,17 @@ export function Switch({ className, name, formID, controlled, required, value, d
 		<input {...props}
 			id={id}
 			name={name}
-			type='checkbox'
+			type="checkbox"
 			checked={controlled ? value : undefined}
 			defaultChecked={defaultValue}
-			className='custom-control-input'
+			className="custom-control-input"
 			onChange={(evt: React.ChangeEvent<HTMLInputElement>) => onChange(!value, evt.target.name)}
 			onBlur={onBlur ? (evt: React.FocusEvent<HTMLInputElement>) => onBlur(evt.target.name) : undefined}
 			aria-describedby={legend && (id + '-legend')}
 		/>
-		<label htmlFor={id} className='custom-control-label'>{label}{required ? <span className='text-danger'>*</span> : null}</label>
-		<legend id={id + '-legend'} className='form-text text-muted'>{legend}</legend>
-		{error && <div className='invalid-feedback'>{error}</div>}
+		<label htmlFor={id} className="custom-control-label">{label}{required ? <span className="text-danger">*</span> : null}</label>
+		<legend id={id + '-legend'} className="form-text text-muted">{legend}</legend>
+		{error && <div className="invalid-feedback">{error}</div>}
 	</div>
 }
 
@@ -240,7 +240,7 @@ export function Radio<V>({ className, name, formID, controlled, required, radioV
 		<input {...props}
 			id={id}
 			name={name}
-			type='radio'
+			type="radio"
 			checked={controlled ? radioValue === value : undefined}
 			defaultChecked={radioValue === defaultValue}
 			className={'form-check-input' + (error ? ' is-invalid' : error === false ? ' is-valid' : '')}
@@ -249,8 +249,8 @@ export function Radio<V>({ className, name, formID, controlled, required, radioV
 			aria-describedby={legend && (id + '-legend')}
 		/>
 		<label htmlFor={id}>{label}</label>
-		<legend id={id + '-legend'} className='form-text text-muted'>{legend}</legend>
-		{error && <div className='invalid-feedback'>{error}</div>}
+		<legend id={id + '-legend'} className="form-text text-muted">{legend}</legend>
+		{error && <div className="invalid-feedback">{error}</div>}
 	</div>
 }
 
@@ -271,7 +271,7 @@ export interface SelectProps<V extends string | number | string[] | undefined> e
 export function Select<V extends string | number | string[] | undefined>({ className, name, formID, controlled, required, options, type, value, defaultValue, label, error, legend, onChange, onBlur, ...props }: SelectProps<V>) {
 	const id = formID ? `${formID}-${name}` : name
 	return <div className={'form-group' + (className ? ` ${className}` : '')}>
-		<label htmlFor={id}>{label}{required ? <span className='text-danger'>*</span> : null}</label>
+		<label htmlFor={id}>{label}{required ? <span className="text-danger">*</span> : null}</label>
 		<select {...props}
 			id={id}
 			name={name}
@@ -284,8 +284,8 @@ export function Select<V extends string | number | string[] | undefined>({ class
 		>
 			{ options.map(([name, label], idx) => <option key={idx} value={name}>{label}</option>) }
 		</select>
-		<legend id={id + '-legend'} className='form-text text-muted'>{legend}</legend>
-		{error && <div className='invalid-feedback'>{error}</div>}
+		<legend id={id + '-legend'} className="form-text text-muted">{legend}</legend>
+		{error && <div className="invalid-feedback">{error}</div>}
 	</div>
 }
 
@@ -305,7 +305,7 @@ export function ColorInput({ className, name, formID, controlled, required, valu
 		<input {...props}
 			id={id}
 			name={name}
-			type='color'
+			type="color"
 			value={controlled ? value : undefined}
 			defaultValue={controlled ? undefined : defaultValue || '#000000'}
 			className={'form-control' + (error ? ' is-invalid' : error === false ? ' is-valid' : '')}
@@ -313,9 +313,9 @@ export function ColorInput({ className, name, formID, controlled, required, valu
 			onBlur={onBlur ? (evt: React.FocusEvent<HTMLInputElement>) => onBlur(evt.target.name) : undefined}
 			aria-describedby={legend && (id + '-legend')}
 		/>
-		<label htmlFor={id}>{label}{required ? <span className='text-danger'>*</span> : null}</label>
-		<legend id={id + '-legend'} className='form-text text-muted'>{legend}</legend>
-		{error && <div className='invalid-feedback'>{error}</div>}
+		<label htmlFor={id}>{label}{required ? <span className="text-danger">*</span> : null}</label>
+		<legend id={id + '-legend'} className="form-text text-muted">{legend}</legend>
+		{error && <div className="invalid-feedback">{error}</div>}
 	</div>
 }
 
