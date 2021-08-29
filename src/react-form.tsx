@@ -25,10 +25,10 @@ export async function validateForm<T extends { [K: string]: unknown }, S extends
 		switch (fld.error) {
 		case undefined:
 			const prop = schema.props[name]
-			let res: t.Result = t.ok(undefined)
+			let res: t.Result<undefined, t.DecoderError> = t.ok(undefined)
 
-			if (prop.type && prop.type.valid) res = await t.validate(state[name], prop.type.ts, prop.type.valid)
-			if (prop.type && t.isOk(res) && prop.valid) res = await t.validate(state[name], prop.type.ts, prop.valid)
+			if (prop.type && prop.type.valid) res = await t.validate(state[name].v, prop.type.ts, prop.type.valid)
+			if (prop.type && t.isOk(res) && prop.valid) res = await t.validate(state[name].v, prop.type.ts, prop.valid)
 			if (t.isErr(res)) errors.push(name)
 			break
 		case true:
@@ -144,7 +144,7 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 	const validateField = React.useCallback(function validateField(value: any, fieldName: keyof T) {
 		(async function () {
 			const field = schema.props[fieldName]
-			let res: t.Result = t.ok(undefined)
+			let res: t.Result<undefined, t.DecoderError> = t.ok(undefined)
 			if (field.type && field.type.valid) res = await t.validate(value, field.type.ts, field.type.valid)
 			if (field.type && t.isOk(res) && field.valid) res = await t.validate(value, field.type.ts, field.valid)
 			if (t.isOk(res)) {
