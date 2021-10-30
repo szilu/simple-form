@@ -37,6 +37,7 @@ export async function validateForm<T extends { [K: string]: unknown }, S extends
 		case false:
 		}
 	}
+	console.log('validateForm errors', errors, state)
 	return errors.length ? errors : null
 }
 
@@ -56,6 +57,7 @@ export interface UseForm<T> {
 	get: () => Partial<T>
 	getChanges: () => Nullable<T>
 	getStrict: () => T
+	setError: (field: keyof T, error: boolean) => void
 	reset: () => void
 }
 
@@ -113,6 +115,10 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 		}
 		return ret
 	}, [schema, form])
+
+	const setError = React.useCallback(function setError(field: keyof T, error: boolean = true) {
+		setForm(form => (form && { ...form, [field]: { ...form[field], error } }))
+	}, [schema, setForm])
 
 	const getChanges = React.useCallback(function getChanges(): T {
 		let ret: any = {}
@@ -177,11 +183,13 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 		return !flds
 	}, [schema, get, setForm, formID])
 
-	const debounceValidator = React.useCallback(debounce(validateField, validatorDebounce || 500), [])
+	const debounceValidator = React.useCallback(debounce(validateField, validatorDebounce || 300), [])
+	const debounceSetForm = React.useCallback(debounce(setForm, validatorDebounce || 300), [])
 
 	const handleChange = React.useCallback(function handleChange(value: any, name: string) {
 		const n = name as keyof T
-		setForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
+		//setForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
+		debounceSetForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
 		debounceValidator(value, n)
 	}, [setForm, debounceValidator])
 
@@ -203,6 +211,7 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 		get,
 		getChanges,
 		getStrict,
+		setError,
 		reset
 	}
 }
