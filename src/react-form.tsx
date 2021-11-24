@@ -53,7 +53,7 @@ export interface UseForm<T> {
 	onBlur: (name: string) => void
 	valid: () => Promise<boolean>	// Array<keyof T> | null
 	set: (values: Partial<T>) => void
-	setStrict: (values: unknown, opts: t.DecoderOpts) => void
+	setStrict: (values: unknown, opts?: t.DecoderOpts) => void
 	get: () => Partial<T>
 	getChanges: () => Nullable<T>
 	getStrict: () => T
@@ -188,8 +188,11 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 
 	const handleChange = React.useCallback(function handleChange(value: any, name: string) {
 		const n = name as keyof T
-		//setForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
-		debounceSetForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
+		if (controlled) {
+			setForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
+		} else {
+			debounceSetForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
+		}
 		debounceValidator(value, n)
 	}, [setForm, debounceValidator])
 
