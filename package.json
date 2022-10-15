@@ -1,6 +1,6 @@
 {
   "name": "@symbion/simple-form",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "description": "Simple form library for React and TypeScript",
   "main": "lib/index.js",
   "module": "esm/index.js",
@@ -11,11 +11,11 @@
   ],
   "scripts": {
     "build": "npm run clean && npm run build-cjs && npm run build-esm",
-    "build-esm": "tsc -p tsconfig-esm.json",
-    "build-cjs": "tsc -p tsconfig.json",
+    "build-esm": "tsc -p tsconfig.json",
+    "build-cjs": "tsc -p tsconfig-cjs.json",
     "clean": "rimraf lib esm",
     "lint": "tslint -p tsconfig.json",
-    "watch": "tsc --watch -p tsconfig-esm.json",
+    "watch": "tsc --watch -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1",
     "_prepare": "npm run build",
     "pub": "npm publish --access public"
@@ -27,19 +27,16 @@
   "author": "Szilárd Hajba <szilu@symbion.hu>",
   "license": "MIT",
   "devDependencies": {
-    "@types/debounce": "^1.2.0",
-    "@types/react": "^17.0.17",
-    "jest": "^27.0.6",
+    "@types/debounce": "^1.2.1",
+    "@symbion/runtype": "^0.5.1",
+    "debounce": "^1.2.1",
+    "jest": "^29.2.0",
     "rimraf": "^3.0.2",
-    "ts-jest": "^27.0.4",
-    "tslib": "^2.3.1",
-    "typescript": "^4.4.2"
+    "ts-jest": "^29.0.3",
+    "tslib": "^2.4.0",
+    "typescript": "^4.8.4"
   },
   "peerDependencies": {
-    "react": "^17.0.2"
-  },
-  "dependencies": {
-    "@symbion/runtype": "^0.3.0",
-    "debounce": "^1.2.1"
+    "react": "^18.2.0"
   }
 }

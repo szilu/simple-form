@@ -13,12 +13,12 @@ interface FormProps<T> {
 }
 
 export function Form<T>({ className, form, onSubmit, onReset, children, ...props }: React.PropsWithChildren<FormProps<T>>) {
-	const handleSubmit = React.useCallback(function handleSubmit(evt) {
+	const handleSubmit = React.useCallback(function handleSubmit(evt: React.SyntheticEvent) {
 		evt.preventDefault()
 		return onSubmit ? onSubmit() : void 0
 	}, [onSubmit])
 
-	const handleReset = React.useCallback(function handleReset(evt) {
+	const handleReset = React.useCallback(function handleReset(evt: React.SyntheticEvent) {
 		if (form.controlled) evt.preventDefault()
 		return onReset ? onReset() : void 0
 	}, [onReset])
