@@ -12,6 +12,8 @@ interface FormProps<T> {
 	form: UseForm<T>
 }
 
+export const FormContext = React.createContext<UseForm<any> | null>(null)
+
 export function Form<T>({ className, form, onSubmit, onReset, children, ...props }: React.PropsWithChildren<FormProps<T>>) {
 	const handleSubmit = React.useCallback(function handleSubmit(evt: React.SyntheticEvent) {
 		evt.preventDefault()
@@ -29,9 +31,9 @@ export function Form<T>({ className, form, onSubmit, onReset, children, ...props
 		noValidate
 		onSubmit={handleSubmit}
 		onReset={handleReset}
-	>
+	><FormContext.Provider value={form}>
 		{children}
-	</form>
+	</FormContext.Provider></form>
 }
 
 //////////////

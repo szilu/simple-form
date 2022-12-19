@@ -2,6 +2,7 @@ import * as React from 'react'
 import debounce from 'debounce'
 import * as t from '@symbion/runtype'
 import { Validator } from '@symbion/runtype/lib/validator'
+import { FormContext } from './components'
 
 type Nullable<T> = { [P in keyof T]?: T[P] | null }
 
@@ -495,23 +496,24 @@ export interface InputPropsBase<V> {
 
 export type WithFormProps<T> = {
 	name: keyof FormState<T>
-	form: UseForm<T>
+	form?: UseForm<T>
 	error?: string
 }
 
 export function withForm<V extends string | number | boolean, P extends InputPropsBase<V> = InputPropsBase<V>, T = any>(InputComponent: React.ComponentType<P>) {
 	return function WithForm({ name, form, error, ...props }: Omit<P, keyof InputPropsBase<any>> & WithFormProps<T>) {
 		// FIXME type assertion
+		const f=form ?? React.useContext(FormContext) as UseForm<T>
 		return <InputComponent {...props as unknown as P}
 			name={name as string}
-			formID={form.formID}
-			controlled={form.controlled}
-			value={form.state && form.state[name]?.v as unknown as V}
-			defaultValue={form.state && form.state[name]?.dv as unknown as V}
-			required={form.required && form.required[name]}
-			error={form.state && form.state[name]?.error && (error || true)}
-			onChange={form.onChange}
-			onBlur={form.onBlur}
+			formID={f.formID}
+			controlled={f.controlled}
+			value={f.state && f.state[name]?.v as unknown as V}
+			defaultValue={f.state && f.state[name]?.dv as unknown as V}
+			required={f.required && f.required[name]}
+			error={f.state && f.state[name]?.error && (error || true)}
+			onChange={f.onChange}
+			onBlur={f.onBlur}
 		/>
 	}
 }
