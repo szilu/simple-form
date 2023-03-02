@@ -99,13 +99,14 @@ export interface UseForm<T> {
 interface UseFormOpts<T> {
 	init?: Partial<T>
 	formID?: string
+	formRef?: React.RefObject<HTMLFormElement>
 	controlled?: boolean
 	validatorDebounce?: number
 }
 
 export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T, GK extends KEYS>(
 	struct: t.StructType<T>,
-	{ init, formID, controlled, validatorDebounce }: UseFormOpts<T> = {}
+	{ init, formID, formRef, controlled, validatorDebounce }: UseFormOpts<T> = {}
 ): UseForm<T> {
 	const strictType = struct
 	const partialType = t.partial(struct)
@@ -206,8 +207,8 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 		}
 		if (flds) {
 			// Focus first child
-			const formEl = document.getElementById(formID || '') as HTMLFormElement
-			for (const el of formEl.elements) {
+			const formEl = formRef?.current || document.getElementById(formID || '') as HTMLFormElement
+			for (const el of formEl?.elements) {
 				const f = el as any
 				if (f.name && f.focus && (flds as string[]).indexOf(f.name) >= 0) {
 					f.focus()
@@ -234,7 +235,7 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 	}, [setForm, debounceValidator])
 
 	const handleBlurEvent = React.useCallback(function handleBlur(evt: React.FocusEvent<HTMLInputElement>) {
-		if (form) validateField(form[evt.target.name as keyof T].v, evt.target.name as keyof T)
+		if (form) validateField(form[evt.target.name as keyof T]?.v, evt.target.name as keyof T)
 	}, [form])
 
 	const handleChange = React.useCallback(function handleChange(value: any, name: string) {
@@ -249,7 +250,7 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 
 	const handleBlur = React.useCallback(function handleBlur(name: string) {
 		const n = name as keyof T
-		if (form) validateField(form[name as keyof T].v, n)
+		if (form) validateField(form[name as keyof T]?.v, n)
 	}, [form])
 
 	const props = function inputProps(name: (keyof T) & string): InputProps {
