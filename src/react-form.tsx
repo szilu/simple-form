@@ -223,7 +223,9 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 
 	const handleChangeEvent = React.useCallback(function handleChange(evt: React.ChangeEvent<HTMLInputElement>) {
 		const name = evt.target.name
-		const value = evt.target.value
+		const value = evt.target.type == 'radio' ? (evt.target.checked ? evt.target.value : undefined)
+			: evt.target.type == 'checkbox' ? evt.target.checked
+			: evt.target.value
 		const n = name as keyof T
 		if (controlled) {
 			setForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
@@ -256,7 +258,7 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 		return {
 			name: '' + name,
 			value: controlled ? '' + form?.[name]?.v : undefined,
-			defaultValue: controlled ? undefined : '' + form?.[name]?.dv,
+			defaultValue: controlled ? undefined : form?.[name]?.dv === undefined ? undefined : '' + form?.[name]?.dv,
 			required: required?.[name],
 			onChange: handleChangeEvent,
 			onBlur: handleBlurEvent

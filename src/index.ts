@@ -1,3 +1,3 @@
-export { useForm, useFormSchema, withForm, InputPropsBase, UseForm } from './react-form'
+export { useForm, useFormSchema, InputProps, withForm, InputPropsBase, UseForm } from './react-form'
 
 // vim: ts=4

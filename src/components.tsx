@@ -232,17 +232,18 @@ export function Switch({ className, name, formID, controlled, required, value, d
 ///////////
 // Radio //
 ///////////
-export interface RadioProps<V> extends InputProps<V> {
+export interface RadioProps<V extends string | number> extends InputProps<V> {
 	radioValue: V
 }
 
-export function Radio<V>({ className, name, formID, controlled, required, radioValue, value, defaultValue, label, error, legend, onChange, onBlur, ...props }: RadioProps<V>) {
+export function Radio<V extends string | number>({ className, name, formID, controlled, required, radioValue, value, defaultValue, label, error, legend, onChange, onBlur, ...props }: RadioProps<V>) {
 	const id = formID ? `${formID}-${name}-${radioValue}` : name
 	return <div className={'form-check' + (className ? ` ${className}` : '')}>
 		<input {...props}
 			id={id}
 			name={name}
 			type="radio"
+			value={radioValue}
 			checked={controlled ? radioValue === value : undefined}
 			defaultChecked={radioValue === defaultValue}
 			className={'form-check-input' + (error ? ' is-invalid' : error === false ? ' is-valid' : '')}
