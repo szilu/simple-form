@@ -227,12 +227,16 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 			: evt.target.type == 'checkbox' ? evt.target.checked
 			: evt.target.value
 		const n = name as keyof T
+		const type = struct.props[n]
+		const res = t.decode(type, value, { coerceAll: true })
+		const val = t.isOk(res) ? res.ok : value
+
 		if (controlled) {
-			setForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
+			setForm(form => (form && { ...form, [n]: { ...form[n], v: val } }))
 		} else {
-			debounceSetForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
+			debounceSetForm(form => (form && { ...form, [n]: { ...form[n], v: val } }))
 		}
-		debounceValidator(value, n)
+		debounceValidator(val, n)
 	}, [setForm, debounceValidator])
 
 	const handleBlurEvent = React.useCallback(function handleBlur(evt: React.FocusEvent<HTMLInputElement>) {
@@ -241,8 +245,9 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 
 	const handleChange = React.useCallback(function handleChange(value: any, name: string) {
 		const n = name as keyof T
+
 		if (controlled) {
-			setForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
+			setForm(form => (form && { ...form, [n]: { ...form[n], v: value }}))
 		} else {
 			debounceSetForm(form => (form && { ...form, [n]: { ...form[n], v: value } }))
 		}
