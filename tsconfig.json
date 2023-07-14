@@ -1,8 +1,8 @@
 {
 	"compilerOptions": {
 		"module": "ES6",
-		"moduleResolution": "node",
-		"outDir": "esm",
+		"moduleResolution": "nodenext",
+		"outDir": "lib",
 
 		"target": "es2019",
 		"esModuleInterop": true,

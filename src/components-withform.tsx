@@ -1,5 +1,5 @@
-import * as C from './components'
-import { withForm } from './react-form'
+import * as C from './components.js'
+import { withForm } from './react-form.js'
 
 export default function typedInputs<T>() {
 	return {

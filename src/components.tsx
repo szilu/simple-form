@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { InputPropsBase, UseForm } from './react-form'
+import { InputPropsBase, UseForm } from './react-form.js'
 
 //////////
 // Form //
