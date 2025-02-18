@@ -135,7 +135,7 @@ export function useForm<T extends { [K: string]: unknown }, KEYS extends keyof T
 	const setStrict = React.useCallback(function setStrict(unknownValues: unknown, opts?: t.DecoderOpts) {
 		const res = t.decode(partialType, unknownValues, opts)
 		if (t.isOk(res)) {
-			set(res.ok)
+			set(res.ok as Partial<T>)
 		} else {
 			console.log('Decode error', res)
 			throw new Error('Decode error')
