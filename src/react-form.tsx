@@ -98,7 +98,7 @@ export interface UseForm<T> {
 interface UseFormOpts<T> {
 	init?: Partial<T>
 	formID?: string
-	formRef?: React.RefObject<HTMLFormElement>
+	formRef?: React.RefObject<HTMLFormElement | null>
 	controlled?: boolean
 	validatorDebounce?: number
 }
