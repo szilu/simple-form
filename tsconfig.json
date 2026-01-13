@@ -10,5 +10,6 @@
 		"jsx": "react",
 		"strict": true,
 		"baseUrl": "."
-	}
+	},
+	"exclude": ["lib", "**/*.spec.ts"]
 }
